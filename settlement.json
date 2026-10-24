@@ -3,7 +3,10 @@
   "chainId": 84532,
   "rpcUrl": "https://sepolia.base.org",
   "explorer": "https://sepolia.basescan.org",
-  "address": null,
+  "address": "0xf6abf019013772991b697d15161916eccf5406c2",
   "operator": "0xac7466A81943Af2C46d1B3ECF0428fb700986726",
-  "note": "Not deployed yet. Fund the operator address with Base Sepolia ETH, run `npm run deploy`, and commit the rewritten file."
+  "deployTx": "0x110b9fbf2c7c4b9ef03e5edcfa53a618cac42dd147d0b07874e3930a07613419",
+  "deployBlock": 49475203,
+  "deployedAt": "2026-10-24T04:41:49.344Z",
+  "compiler": "solc 0.8.28+commit.7893614a.Emscripten.clang"
 }
