@@ -6,9 +6,18 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "PORT=8765 node server.js"
+    "dev": "PORT=8765 node server.js",
+    "compile": "node scripts/compile.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "test": "node --test tests/settlement.test.mjs"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "viem": "^2.57.10"
+  },
+  "devDependencies": {
+    "solc": "0.8.28"
   }
 }

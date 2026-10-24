@@ -13,3 +13,10 @@ tests/jvm/out/
 tests/jvm/res/
 __pycache__/
 .DS_Store
+# node deps
+node_modules/
+# secrets: relayer key lives only in a local .env, never in git
+.env
+.env.*
+!.env.example
+settlement.local.json
