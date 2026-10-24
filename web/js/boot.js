@@ -11,10 +11,11 @@
   if (!location.hash) location.replace('#/login');
   App.render();
   // Testnet settlement: learn whether the server's relayer is on, resume pending tx polling,
-  // and repaint the admin chain page once the status is known.
+  // and repaint pages that show chain status or the BaseScan link once the status is known.
   Chain.init().then(() => {
     chainResume(); App.save();
-    if (!App.ui.layerOpen && parsePath(currentPath()).path === '/a/chain') App.refresh();
+    const p = parsePath(currentPath());
+    if (!App.ui.layerOpen && (p.path === '/a/chain' || p.path === '/u/home' || (p.path.startsWith('/u/quest/') && p.q.tab === 'records'))) App.refresh();
   });
   window.addEventListener('pagehide', () => App.save());
   // Installable PWA on the web; the Android APK serves the same files itself and skips this.

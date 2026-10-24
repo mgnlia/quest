@@ -15,6 +15,7 @@ const Chain = {
   on(){ return !!(this.cfg && this.cfg.enabled); },
   explorer(){ return (this.cfg && this.cfg.explorer) || 'https://sepolia.basescan.org'; },
   txUrl(hash){ return TX_RE.test(hash) ? this.explorer() + '/tx/' + hash : ''; },
+  addrUrl(){ const a = this.cfg && this.cfg.contract; return /^0x[0-9a-fA-F]{40}$/.test(a || '') ? this.explorer() + '/address/' + a : ''; },
   /* Settlement key = quest id + a per-browser run id, so every demo run gets fresh on-chain slots
      (seed quest ids repeat across visitors and after "reset demo data"). Fits the contract's bytes32. */
   key(q){ if (!App.state.chainRun) App.state.chainRun = Math.random().toString(36).slice(2, 8).toUpperCase().padEnd(6, '0'); return q.id + '.' + App.state.chainRun; },
@@ -109,6 +110,12 @@ async function chainRelease(q, rec, amount, terms){
   } catch (e) { chainDrop(rec, e); }
   App.save(); chainPaint(rec); if (esc0) chainPaint(esc0);
   return rec;
+}
+
+/* Link to the contract's page on BaseScan: every deposit and release ever written, from any browser. */
+function chainScanLink(){
+  const u = Chain.addrUrl(); if (!u) return '';
+  return `<a class="link-btn mt8" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${ic('chain')}${tt('BaseScan에서 전체 온체인 기록 보기', 'View all on-chain records on BaseScan')}${ic('chev')}</a>`;
 }
 
 /* Small summary used by the quest records tab and the admin chain page. */

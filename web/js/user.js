@@ -160,7 +160,7 @@ U.home = () => {
     <section class="section">
       <button class="card outline" style="width:100%;text-align:left;display:flex;gap:12px;align-items:center" data-go="/u/service/records">
         <span class="ico-box violet">${ic('chain')}</span>
-        <div style="flex:1"><div class="h4">${tt('모든 기록은 체인에 해시로 남습니다', 'Every record is anchored on-chain')}</div><div class="caption mt4">${tt('Base Sepolia 테스트넷 · 마지막 앵커링', 'Base Sepolia testnet · last anchored')} ${ago(App.state.admin.batches[0].ts)}</div></div>
+        <div style="flex:1"><div class="h4">${tt('모든 기록은 체인에 해시로 남습니다', 'Every record is anchored on-chain')}</div><div class="caption mt4">${tt('Base Sepolia 테스트넷 · 마지막 앵커링', 'Base Sepolia testnet · last anchored')} ${ago(App.state.admin.batches[0].ts)}</div>${chainScanLink()}</div>
         <span class="pulse-dot"></span>
       </button>
     </section>`
@@ -523,7 +523,7 @@ ACT['obj-submit'] = async btn => {
 /* ---- records ---- */
 function qRecords(q){
   const verified = App.ui.verified || {};
-  return `<div class="card hstack" style="gap:12px"><span class="ico-box violet">${ic('chain')}</span><div style="flex:1"><div class="h4">${tt(`기록 ${q.records.length}건 · Base Sepolia 테스트넷`, `${q.records.length} records · Base Sepolia testnet`)}</div><div class="caption mt4">${tt('내용은 올리지 않고 해시만 남깁니다. 원본은 암호화해 따로 보관합니다.', 'Only hashes go on-chain. Originals are encrypted and stored separately.')}</div></div></div>
+  return `<div class="card hstack" style="gap:12px"><span class="ico-box violet">${ic('chain')}</span><div style="flex:1"><div class="h4">${tt(`기록 ${q.records.length}건 · Base Sepolia 테스트넷`, `${q.records.length} records · Base Sepolia testnet`)}</div><div class="caption mt4">${tt('내용은 올리지 않고 해시만 남깁니다. 원본은 암호화해 따로 보관합니다.', 'Only hashes go on-chain. Originals are encrypted and stored separately.')}</div>${chainScanLink()}</div></div>
     ${chainNote(q)}
     <div class="card mt12"><div class="tl">${q.records.slice().reverse().map((r, i) => { const key = q.id + r.tx; return `<div class="tl-item"><div class="t">${esc(L(r.ev))}</div><div class="s">${fmtDate(r.ts, 'dt')}${r.real ? '' : ` · ${tt('블록', 'Block')} #${num(r.block)}`}</div>
       ${r.real ? chainTag(r) : ''}
