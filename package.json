@@ -1,0 +1,14 @@
+{
+  "name": "quest-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quest — anonymous B2B work exchange demo (web app + Android APK)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "PORT=8765 node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

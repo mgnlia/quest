@@ -1,8 +1,8 @@
 # Quest Demo
 
-익명 B2B 과업 거래 플랫폼 "퀘스트"(가칭)의 가상 데모 앱입니다. 발주사·수행사 앱과 관리자 콘솔을 한 앱에 담았고, 서버 없이 기기 안의 가상 데이터로 모든 기능이 실제처럼 반응합니다. 한국어/English, 라이트/다크 모드를 지원합니다.
+익명 B2B 과업 거래 플랫폼 "퀘스트"(가칭)의 가상 데모 앱입니다. 발주사·수행사 앱과 관리자 콘솔을 한 앱에 담았고, 서버 없이 기기 안의 가상 데이터로 모든 기능이 실제처럼 반응합니다. 웹 앱(Railway 배포)과 안드로이드 APK 두 가지로 제공되며, 한국어/English, 라이트/다크 모드를 지원합니다.
 
-A fictional demo of "Quest", an anonymous B2B work exchange. Client and supplier apps plus an admin console, all running offline on mock data. Korean/English, light/dark.
+A fictional demo of "Quest", an anonymous B2B work exchange. Client and supplier apps plus an admin console, all running on mock data. Ships as an installable web app (deployable to Railway with zero config) and as an Android APK. Korean/English, light/dark.
 
 ![screens](docs/screens.png)
 
@@ -18,18 +18,30 @@ MY → "데모 데이터 초기화"로 처음 상태로 돌아갑니다.
 ## 구성
 
 ```
-web/        앱 본체 (HTML/CSS/JS, Pretendard 글꼴, 외부 라이브러리 없음)
+web/        앱 본체 (HTML/CSS/JS, Pretendard 글꼴, PWA 매니페스트·서비스 워커, 외부 라이브러리 없음)
+server.js   웹 앱 서버 (Node 18+, 의존성 없음) · railway.json: Railway 배포 설정
 android/    WebView 셸 (순수 Java), 매니페스트, 리소스, 아이콘
 build.sh    Gradle 없는 빌드: aapt2 → javac → D8 → zipalign → apksigner
 tests/      smoke.py(전 경로), e2e.py(흐름 12개 × 한/영), jvm/(JUnit + Robolectric)
 ```
 
-## 웹으로 미리 보기
+## 웹 앱으로 실행
+
+의존성 없는 Node 서버(`server.js`)가 `web/`을 제공합니다. 휴대폰에서 "홈 화면에 추가"하면 앱처럼 설치되고, 한 번 연 뒤에는 오프라인에서도 열립니다(PWA).
 
 ```bash
-cd web && python3 -m http.server 8765
-# http://127.0.0.1:8765/index.html
+npm start            # http://localhost:3000  (PORT 환경변수로 변경)
 ```
+
+### Railway에 배포
+
+1. Railway에서 **New Project → Deploy from GitHub repo**로 이 저장소를 고릅니다.
+2. 설정은 필요 없습니다. `package.json`을 보고 Node로 빌드하고, `railway.json`대로 `node server.js`를 실행하며 `/healthz`로 상태를 확인합니다. 포트는 Railway가 주는 `PORT`를 씁니다.
+3. 서비스의 **Settings → Networking → Generate Domain**을 누르면 `https://….up.railway.app` 주소가 생깁니다.
+
+이후 `main`에 푸시할 때마다 자동으로 다시 배포됩니다. 외부 패키지가 없어 빌드는 수십 초면 끝납니다.
+
+서버가 하는 일: 파일을 시작할 때 메모리에 올려 두고 brotli/gzip 압축, ETag 캐시, 보안 헤더(CSP 등)를 붙여 응답합니다. 데이터는 각 사용자 브라우저에만 저장되므로 데이터베이스나 환경변수가 필요 없습니다.
 
 ## APK 빌드
 
@@ -48,9 +60,10 @@ export ANDROID_HOME=~/Android/Sdk   # 또는 SDK / BT / AJ 개별 지정
 
 ```bash
 pip install playwright && python -m playwright install chromium
-(cd web && python3 -m http.server 8765 &) 
+PORT=8765 npm start &
 python3 tests/smoke.py      # 전 경로 한/영 렌더링, 콘솔 오류·가로 스크롤 검사
 python3 tests/e2e.py        # 실제 탭·입력으로 흐름 12개 × 한/영
+BASE=http://127.0.0.1:8765/index.html python3 tests/pwa.py   # 설치 가능 여부, 오프라인 동작
 ./build.sh && tests/jvm/run.sh   # 네이티브 셸 18개 (Maven 필요)
 ```
 

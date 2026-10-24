@@ -313,6 +313,7 @@ document.addEventListener('click', e => {
   const fn = ACT[a.dataset.act];
   if (fn){ e.preventDefault(); fn(a, e); }
 });
+document.addEventListener('submit', e => { e.preventDefault(); const b = e.target.querySelector('[data-act]'); if (b && ACT[b.dataset.act]) ACT[b.dataset.act](b, e); });
 document.addEventListener('input', e => { const a = e.target.closest('[data-in]'); if (a && ACT[a.dataset.in]) ACT[a.dataset.in](a, e); });
 document.addEventListener('change', e => { const a = e.target.closest('[data-ch]'); if (a && ACT[a.dataset.ch]) ACT[a.dataset.ch](a, e); });
 ACT['layer-close'] = () => closeLayer();

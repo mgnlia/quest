@@ -53,7 +53,7 @@ V.login = (p, q) => {
       <button class="demo-acct ${acct === 'client' ? 'on' : ''}" data-act="pick-acct" data-v="client">${veil('K2Q9', 's')}<div><div class="t">${tt('발주사', 'Client')}</div><div class="s">client@quest.demo</div></div></button>
       <button class="demo-acct ${acct === 'supplier' ? 'on' : ''}" data-act="pick-acct" data-v="supplier">${veil('D8R2', 's')}<div><div class="t">${tt('수행사', 'Supplier')}</div><div class="s">supplier@quest.demo</div></div></button>
     </div>
-    <form class="stack mt16" data-act-form="login" onsubmit="return false">
+    <form class="stack mt16" data-act-form="login">
       <div class="field"><label for="lg-email">${tt('이메일', 'Email')}</label><input class="input" id="lg-email" type="email" autocomplete="username" value="${acct}@quest.demo"></div>
       <div class="field"><label for="lg-pw">${tt('비밀번호', 'Password')}</label><input class="input" id="lg-pw" type="password" autocomplete="current-password" value="demo1234"></div>
       <button class="btn btn-primary btn-block mt8" id="lg-btn" data-act="login">${tt('로그인', 'Sign in')}</button>

@@ -11,5 +11,10 @@
   if (!location.hash) location.replace('#/login');
   App.render();
   window.addEventListener('pagehide', () => App.save());
+  // Installable PWA on the web; the Android APK serves the same files itself and skips this.
+  const inApk = !!window.QuestNative || location.hostname === 'appassets.androidplatform.net';
+  if ('serviceWorker' in navigator && !inApk && /^https?:$/.test(location.protocol)){
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
   document.addEventListener('visibilitychange', () => { if (document.hidden) App.save(); });
 })();

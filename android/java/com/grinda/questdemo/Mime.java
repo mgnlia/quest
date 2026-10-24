@@ -14,6 +14,7 @@ final class Mime {
         if (p.endsWith(".css")) return "text/css";
         if (p.endsWith(".js") || p.endsWith(".mjs")) return "text/javascript";
         if (p.endsWith(".json")) return "application/json";
+        if (p.endsWith(".webmanifest")) return "application/manifest+json";
         if (p.endsWith(".svg")) return "image/svg+xml";
         if (p.endsWith(".png")) return "image/png";
         if (p.endsWith(".jpg") || p.endsWith(".jpeg")) return "image/jpeg";

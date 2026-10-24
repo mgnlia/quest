@@ -37,7 +37,7 @@ fi
 rm -rf "$OUT"; mkdir -p "$OUT"/{res,classes,dex,gen,apk,assets/www} "$DIST"
 
 echo "== assets"
-cp -r web/index.html web/css web/js web/fonts "$OUT/assets/www/"
+cp -r web/. "$OUT/assets/www/"
 
 echo "== aapt2 compile"
 "$BT/aapt2" compile --dir android/res -o "$OUT/res/compiled.zip"
