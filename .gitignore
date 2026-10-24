@@ -1,0 +1,15 @@
+# build output
+build/
+dist/
+.tools/
+test-output/
+# signing keys never go in git
+keystore/
+*.jks
+*.keystore
+# test dependencies
+tests/jvm/lib/
+tests/jvm/out/
+tests/jvm/res/
+__pycache__/
+.DS_Store

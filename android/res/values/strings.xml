@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quest Demo</string>
+    <string name="share_title">Share</string>
+    <string name="load_error">Could not open the demo. Please restart the app.</string>
+</resources>

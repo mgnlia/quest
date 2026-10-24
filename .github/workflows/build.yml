@@ -1,0 +1,35 @@
+name: build-apk
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;34.0.0 platforms;android-34'
+      - name: Restore signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            mkdir -p keystore && echo "$KEYSTORE_B64" | base64 -d > keystore/questdemo.jks
+          fi
+      - name: Build APK
+        env:
+          KS_PASS: ${{ secrets.KS_PASS || 'grinda-quest' }}
+        run: ./build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuestDemo-apk
+          path: dist/*.apk

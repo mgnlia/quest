@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">퀘스트 데모</string>
+    <string name="share_title">공유</string>
+    <string name="load_error">데모를 열지 못했습니다. 앱을 다시 시작해 주세요.</string>
+</resources>
