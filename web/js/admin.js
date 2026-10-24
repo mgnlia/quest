@@ -269,7 +269,7 @@ ACT['po-all'] = async el => { const R = adm().payouts.filter(p => p.status === '
 route('/a/chain', () => {
   const S = adm(), vr = App.ui.chainVerify;
   const monthCost = S.batches.reduce((a, b) => a + b.cost, 0) * 20;
-  return { title: tt('블록체인 기록', 'On-chain records'), sub: tt('Base 메인넷 · 머클 루트 배치', 'Base mainnet · Merkle-root batches'),
+  return { title: tt('블록체인 기록', 'On-chain records'), sub: tt('Base Sepolia 테스트넷 · 머클 루트 배치', 'Base Sepolia testnet · Merkle-root batches'),
     html: `<div class="kpis"><div class="kpi"><div class="l">${tt('앵커링 대기', 'Waiting to anchor')}</div><div class="v">${tt(`${S.pendingAnchors}건`, S.pendingAnchors)}</div><span class="d flat">${tt('6시간마다 자동', 'Auto every 6 h')}</span></div><div class="kpi"><div class="l">${tt('최근 배치', 'Last batch')}</div><div class="v" style="font-size:20px">${S.batches[0].id}</div><span class="d flat">${ago(S.batches[0].ts)}</span></div><div class="kpi"><div class="l">${tt('이번 달 기록 비용', 'Anchoring cost this month')}</div><div class="v">$${monthCost.toFixed(2)}</div><span class="d flat">${tt('해시 1건 < $0.0001', '< $0.0001 per hash')}</span></div></div>
       <div class="a-grid two">
         <div class="panel"><div class="panel-h"><h2 class="h4">${tt('배치 기록', 'Batches')}</h2><button class="btn btn-primary btn-s" data-act="anchor" ${S.pendingAnchors ? '' : 'disabled'}>${ic('chain')}${tt('지금 앵커링', 'Anchor now')}</button></div>
