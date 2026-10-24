@@ -64,6 +64,9 @@ API (same origin): `GET /api/settle/config` · `POST /api/settle/deposit {questI
 1. 테스트넷 전용 지갑 키를 `.env`에 `SETTLEMENT_PRIVATE_KEY=0x…`로 둡니다(`.env`는 git에 올라가지 않습니다). 메인넷 자산이 있는 키는 쓰지 마세요.
 2. 그 주소에 Base Sepolia 파우셋으로 테스트 ETH를 받은 뒤 `npm run deploy`를 실행하고, 갱신된 `settlement.json`을 커밋합니다.
 3. Railway 서비스 Variables에 `SETTLEMENT_PRIVATE_KEY`를 넣습니다. 선택 변수: `SETTLEMENT_RPC_URL`(기본 `https://sepolia.base.org`), `SETTLEMENT_CONTRACT`(settlement.json 대신), `SETTLE_IP_WRITES`(IP당 10분 쓰기 횟수, 기본 12), `SETTLE_HOURLY_WRITES`(시간당 전체, 기본 120).
+4. `npm run verify`로 컨트랙트 소스를 Sourcify에 공개 검증합니다(API 키 불필요). 같은 컴파일러·설정으로 다시 컴파일해 배포된 바이트코드와 대조합니다.
+
+배포된 컨트랙트 `0xf6abf019013772991b697d15161916eccf5406c2`(MIT)는 소스가 공개 검증되어 있습니다: [Sourcify](https://repo.sourcify.dev/84532/0xf6abf019013772991b697d15161916eccf5406c2) · [Blockscout](https://base-sepolia.blockscout.com/address/0xf6abf019013772991b697d15161916eccf5406c2?tab=contract) · [BaseScan](https://sepolia.basescan.org/address/0xf6abf019013772991b697d15161916eccf5406c2)
 
 ## APK 빌드
 

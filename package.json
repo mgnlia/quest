@@ -9,6 +9,7 @@
     "dev": "PORT=8765 node server.js",
     "compile": "node scripts/compile.mjs",
     "deploy": "node scripts/deploy.mjs",
+    "verify": "node scripts/verify.mjs",
     "test": "node --test tests/settlement.test.mjs"
   },
   "engines": {
