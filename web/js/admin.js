@@ -174,7 +174,7 @@ ACT['rv-decide'] = async btn => {
   const q = App.state.quests.find(x => x.id === r.quest);
   if (q && dec !== 'panel'){
     addChain(q, EV.resolve);
-    if (dec === 'pass'){ q.status = 'done'; q.escrow.status = 'released'; q.resolution = { ko:`재검수 결과 통과 유지: ${memo}`, en:`Re-review upheld the pass: ${memo}` }; addChain(q, EV.pay); }
+    if (dec === 'pass'){ q.status = 'done'; q.escrow.status = 'released'; q.resolution = { ko:`재검수 결과 통과 유지: ${memo}`, en:`Re-review upheld the pass: ${memo}` }; const payRec = addChain(q, EV.pay); chainRelease(q, payRec, priceOf(q), { quest:q.id, review:r.id, decision:'pass', memo, decidedAt:payRec.ts }); }
     else { q.status = 'progress'; q.progress = 80; q.reworkNote = { ko:`재검수 결과 재작업 요청: ${memo}`, en:`Re-review requested rework: ${memo}` }; q.deadline = Date.now() + 7 * DAY; }
     addNotif({ aud:'client', icon:'gavel', tone: dec === 'pass' ? 'good' : 'warn', go:`/u/quest/${q.id}?tab=review`, t:{ ko:`${q.id} 재검수 결과: ${label.ko}`, en:`${q.id} re-review: ${label.en}` }, s:{ ko:memo, en:memo } });
   }
@@ -279,8 +279,23 @@ route('/a/chain', () => {
           <div class="hstack mt8"><button class="btn btn-primary btn-m" style="flex:1" data-act="cv-go">${tt('검증', 'Verify')}</button><button class="btn btn-gray btn-m" data-act="cv-bad">${tt('변조 예시', 'Tampered example')}</button></div>
           ${vr ? `<div class="ai-shield" style="${vr.ok ? '' : 'background:var(--bad-soft);color:var(--bad)'}">${ic(vr.ok ? 'check' : 'alert')}<span>${vr.ok ? tt(`일치. 배치 ${S.batches[1].id} · 블록 #${num(S.batches[1].block)}에 포함된 기록입니다.`, `Match. Included in batch ${S.batches[1].id}, block #${num(S.batches[1].block)}.`) : tt('어떤 배치에도 없습니다. 기록 이후 바뀌었거나 기록되지 않은 값입니다.', 'Not found in any batch. It changed after recording or was never recorded.')}</span></div>` : ''}
           <div class="divider"></div><div class="caption">${tt('법적 지위: 위변조 여부를 확인하는 보조 기록입니다. 핵심 산출물은 특허청 원본증명서비스에 병행 등록합니다.', 'Legal status: a supporting tamper-evidence record. Key files are also registered with the KIPO timestamp service.')}</div></div>
-      </div>` };
+      </div>
+      ${testnetPanel()}` };
 });
+/* Real settlement transactions written by the relayer (Base Sepolia testnet). */
+function testnetPanel(){
+  const C = Chain.cfg, R = chainRecs().sort((a, b) => b.r.ts - a.r.ts);
+  const addr = C && C.contract && /^0x[0-9a-fA-F]{40}$/.test(C.contract) ? C.contract : null;
+  const state = !C ? tt('서버 정산 API 없음 · 데모 기록만 표시', 'No settlement API on this server · demo records only')
+    : C.enabled ? tt('연결됨', 'Connected')
+    : ({ 'no-key': tt('릴레이어 키 미설정 · 데모 기록으로 동작', 'Relayer key not set · running on demo records'), 'no-contract': tt('컨트랙트 미배포 · 데모 기록으로 동작', 'Contract not deployed · running on demo records'), unfunded: tt('릴레이어 잔액 부족 · 데모 기록으로 동작', 'Relayer out of testnet ETH · running on demo records') }[C.reason] || tt('사용 불가 · 데모 기록으로 동작', 'Unavailable · running on demo records'));
+  return `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2 class="h4">${tt('테스트넷 정산 기록', 'Testnet settlements')}</h2><span class="pill plain ${C && C.enabled ? 'st-done' : 'st-review'}">${state}</span></div>
+    <div class="caption">${tt('대금 예치와 지급은 Base Sepolia 테스트넷의 QuestSettlement 컨트랙트에 실제 트랜잭션으로 기록됩니다. 금액은 원화 숫자로만 남고 실제 자금은 오가지 않습니다.', 'Escrow deposits and releases are written as real transactions to the QuestSettlement contract on the Base Sepolia testnet. Amounts are recorded as KRW numbers; no real value moves.')}
+      ${addr ? `<br>${tt('컨트랙트', 'Contract')} <a class="hash" href="${esc(Chain.explorer())}/address/${addr}" target="_blank" rel="noopener noreferrer">${shortHash(addr)}${ic('chev')}</a>` : ''}</div>
+    ${R.length ? `<div class="tbl-wrap mt12"><table class="tbl"><thead><tr><th>${tt('퀘스트', 'Quest')}</th><th>${tt('이벤트', 'Event')}</th><th>${tt('트랜잭션', 'Transaction')}</th><th>${tt('시각', 'Time')}</th></tr></thead><tbody>
+      ${R.map(({ q, r }) => `<tr><td>${q.id}</td><td>${esc(L(r.ev))}</td><td>${chainTag(r)}</td><td class="tnum">${ago(r.ts)}</td></tr>`).join('')}</tbody></table></div>`
+      : `<div class="caption mt12">${tt('아직 이 브라우저에서 만든 테스트넷 기록이 없습니다. 발주사로 대금을 예치하거나 검수를 확정해 보세요.', 'No testnet records from this browser yet. Fund an escrow or accept a delivery as a client.')}</div>`}</div>`;
+}
 ACT['anchor'] = async el => { await withLoading(el, 1400); const S = adm(); const n = S.pendingAnchors; S.batches.unshift({ id:'B-' + (parseInt(S.batches[0].id.slice(2)) + 1), ts:Date.now(), count:n, root:'0x' + hexOf('root' + Date.now(), 64), tx:txHash('b' + Date.now()), block:App.state.chainHeight += 3, cost:+(0.004 + n * 0.00005).toFixed(4) }); S.pendingAnchors = 0; audit(`해시 ${n}건 앵커링`, `Anchored ${n} hashes`); App.save(); toast(tt(`해시 ${n}건을 Base에 기록했습니다.`, `Anchored ${n} hashes on Base.`), 'ok'); App.refresh(); };
 ACT['cv-go'] = async el => { const v = ($('#cv-in').value || '').trim(); App.ui.cvIn = v; await withLoading(el, 900); App.ui.chainVerify = { ok: /^0x[0-9a-f]{64}$/.test(v) && !App.ui.cvTampered }; App.ui.cvTampered = false; App.refresh(); };
 ACT['cv-bad'] = () => { const v = txHash('Q-2026-04124'); App.ui.cvIn = v.slice(0, -4) + 'beef'; App.ui.cvTampered = true; App.ui.chainVerify = null; App.refresh(); };

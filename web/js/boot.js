@@ -10,6 +10,12 @@
   }
   if (!location.hash) location.replace('#/login');
   App.render();
+  // Testnet settlement: learn whether the server's relayer is on, resume pending tx polling,
+  // and repaint the admin chain page once the status is known.
+  Chain.init().then(() => {
+    chainResume(); App.save();
+    if (!App.ui.layerOpen && parsePath(currentPath()).path === '/a/chain') App.refresh();
+  });
   window.addEventListener('pagehide', () => App.save());
   // Installable PWA on the web; the Android APK serves the same files itself and skips this.
   const inApk = !!window.QuestNative || location.hostname === 'appassets.androidplatform.net';

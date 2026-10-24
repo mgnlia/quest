@@ -352,17 +352,24 @@ ACT['pay-go'] = async el => {
     await sleep(2600);
     if (!App.ui.layerOpen) return;
   }
-  for (let k = 0; k <= 4; k++){ sheetBody(stepsHtml(k)); await sleep(k === 0 ? 500 : 650); if (!App.ui.layerOpen && k < 4) return; }
+  for (let k = 0; k <= 3; k++){ sheetBody(stepsHtml(k)); await sleep(k === 0 ? 500 : 650); if (!App.ui.layerOpen) return; }
   q.selected = pp.id; q.status = 'progress'; q.progress = 5; q.escrow = { status:'deposited', vaccount: va };
   if (App.ui.payMethod === 'wallet') App.state.wallet.balance -= pp.price;
   App.state.wallet.txs.unshift({ t:{ ko:`${q.id} 대금 예치`, en:`Escrow for ${q.id}` }, amt:-pp.price, ts:Date.now(), kind:'escrow' });
   q.chat.push({ from:'sys', text:{ ko:'계약이 체결되었습니다. 이 대화는 AI 중재를 거치며 식별 정보는 자동으로 가려집니다.', en:'Contract signed. This chat is AI-mediated and identifying details are masked automatically.' }, ts:Date.now() });
-  addChain(q, EV.contract); addChain(q, EV.escrow);
+  addChain(q, EV.contract); const escRec = addChain(q, EV.escrow);
   addNotif({ aud:'client', icon:'check', tone:'good', go:`/u/quest/${q.id}?tab=overview`, t:{ ko:`${q.id} 계약과 예치가 완료되었습니다`, en:`${q.id} contract signed and funded` }, s:{ ko:`수행사 ${pp.alias}가 작업을 시작합니다.`, en:`Supplier ${pp.alias} is starting work.` } });
   App.save();
+  // Step 4 "anchoring" waits for the real testnet deposit when settlement is on; otherwise it is the usual short pause.
+  await Promise.all([sleep(650), chainDeposit(q, escRec, pp.price, { quest:q.id, supplier:pp.alias, amountKrw:pp.price, criteria:q.criteria.map(c => c.en), signedAt:escRec.ts })]);
+  if (App.ui.layerOpen) sheetBody(stepsHtml(4));
+  await sleep(300);
+  if (!App.ui.layerOpen) return;
+  const chainLine = escRec.real ? `<div class="card outline mt16" style="text-align:left"><div class="caption">${tt('예치 기록 · Base Sepolia 테스트넷', 'Escrow record · Base Sepolia testnet')}</div>${chainTag(escRec)}</div>` : '';
   sheetBody(`<div class="success-burst"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
     <div class="sh-title center mt16">${tt('계약과 예치가 끝났습니다', 'Contract signed and funded')}</div>
     <div class="sh-sub center">${tt(`수행사 ${pp.alias}에게 계약 후 공개 자료가 전달되었습니다.`, `Post-contract materials were released to supplier ${pp.alias}.`)}</div>
+    ${chainLine}
     <button class="btn btn-primary btn-block mt20" data-act="layer-close-go" data-go-to="/u/quest/${q.id}?tab=overview">${tt('퀘스트로 돌아가기', 'Back to quest')}</button>`);
   haptic('success');
 };
@@ -476,7 +483,8 @@ ACT['accept'] = async el => {
   const ok = await confirmBox({ title: tt('검수를 확정할까요?', 'Confirm acceptance?'), body: tt(`${won(priceOf(q))}이 수행사 ${sup.alias}에게 지급됩니다. 확정 후에는 되돌릴 수 없습니다.`, `${won(priceOf(q))} will be released to supplier ${sup.alias}. This cannot be undone.`), ok: tt('확정하고 지급', 'Accept and release') });
   if (!ok) return;
   q.status = 'done'; q.escrow.status = 'released';
-  addChain(q, EV.accept); addChain(q, EV.pay);
+  addChain(q, EV.accept); const payRec = addChain(q, EV.pay);
+  chainRelease(q, payRec, priceOf(q), { quest:q.id, supplier:sup.alias, amountKrw:priceOf(q), verdict:q.verdict ? q.verdict.state : null, acceptedAt:payRec.ts });
   App.state.wallet.txs.unshift({ t:{ ko:`${q.id} 지급 확정`, en:`${q.id} released` }, amt:priceOf(q), ts:Date.now(), kind:'release' });
   const inv = App.state.wallet.invoices.find(i => i.q === q.id); if (inv) inv.st = { ko:'발행 완료', en:'Issued' };
   App.state.admin.payouts.unshift({ id:uid('P'), quest:q.id, sup:sup.alias, amt:Math.round(priceOf(q) * .85), due:Date.now(), status:'ready' });
@@ -516,12 +524,25 @@ ACT['obj-submit'] = async btn => {
 function qRecords(q){
   const verified = App.ui.verified || {};
   return `<div class="card hstack" style="gap:12px"><span class="ico-box violet">${ic('chain')}</span><div style="flex:1"><div class="h4">${tt(`기록 ${q.records.length}건 · Base 메인넷`, `${q.records.length} records · Base mainnet`)}</div><div class="caption mt4">${tt('내용은 올리지 않고 해시만 남깁니다. 원본은 암호화해 따로 보관합니다.', 'Only hashes go on-chain. Originals are encrypted and stored separately.')}</div></div></div>
-    <div class="card mt12"><div class="tl">${q.records.slice().reverse().map((r, i) => { const key = q.id + r.tx; return `<div class="tl-item"><div class="t">${esc(L(r.ev))}</div><div class="s">${fmtDate(r.ts, 'dt')} · ${tt('블록', 'Block')} #${num(r.block)}</div>
-      <div class="hstack wrap" style="gap:6px"><span class="hash ${verified[key] ? 'ok' : ''}">${verified[key] ? ic('check').replace('<svg', '<svg style="width:13px;height:13px"') : ''}${shortHash(r.tx)}</span><button class="link-btn mt4" data-act="rec-verify" data-k="${key}">${verified[key] ? tt('일치 확인됨', 'Verified') : tt('검증', 'Verify')}</button><button class="link-btn mt4" data-act="copy" data-text="${r.tx}">${tt('복사', 'Copy')}</button></div></div>`; }).join('')}</div></div>
+    ${chainNote(q)}
+    <div class="card mt12"><div class="tl">${q.records.slice().reverse().map((r, i) => { const key = q.id + r.tx; return `<div class="tl-item"><div class="t">${esc(L(r.ev))}</div><div class="s">${fmtDate(r.ts, 'dt')}${r.real ? '' : ` · ${tt('블록', 'Block')} #${num(r.block)}`}</div>
+      ${r.real ? chainTag(r) : ''}
+      <div class="hstack wrap" style="gap:6px">${r.real ? '' : `<span class="hash ${verified[key] ? 'ok' : ''}">${verified[key] ? ic('check').replace('<svg', '<svg style="width:13px;height:13px"') : ''}${shortHash(r.tx)}</span>`}<button class="link-btn mt4" data-act="rec-verify" data-k="${key}" data-q="${q.id}" data-tx="${esc(r.tx)}">${verified[key] ? tt('일치 확인됨', 'Verified') : tt('검증', 'Verify')}</button><button class="link-btn mt4" data-act="copy" data-text="${r.tx}">${tt('복사', 'Copy')}</button></div></div>`; }).join('')}</div></div>
     <div class="caption mt12">${tt('블록체인 기록은 위변조 여부를 확인할 수 있는 보조 기록입니다. 법적 증거력을 보장하지는 않습니다.', 'On-chain records help detect tampering. They are not a guarantee of legal evidentiary weight.')}</div>`;
 }
 ACT['rec-verify'] = async el => {
   el.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>';
+  const q = findQuest(el.dataset.q), rec = q && q.records.find(r => r.tx === el.dataset.tx);
+  if (rec && rec.real && rec.real.key){
+    // Real record: read the contract's state for this quest and check it matches the event.
+    const s = await fetch('/api/settle/' + encodeURIComponent(rec.real.key), { cache:'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    const want = rec.ev.en === EV.pay.en ? ['released'] : ['deposited', 'released'];
+    if (s && want.includes(s.status)){
+      App.ui.verified = App.ui.verified || {}; App.ui.verified[el.dataset.k] = true;
+      toast(tt(`컨트랙트 상태 확인: ${s.status === 'released' ? '지급 완료' : '예치 중'} · ${won(s.amountKrw)}`, `Contract state: ${s.status} · ${won(s.amountKrw)}`), 'ok');
+    } else toast(s ? tt('아직 블록에 반영되지 않았습니다. 잠시 후 다시 확인해 주세요.', 'Not in a block yet. Try again shortly.') : tt('체인에 연결하지 못했습니다.', 'Could not reach the chain.'), 'warn');
+    return App.refresh();
+  }
   await sleep(900);
   App.ui.verified = App.ui.verified || {}; App.ui.verified[el.dataset.k] = true;
   toast(tt('원본 해시와 체인 기록이 일치합니다.', 'Original hash matches the on-chain record.'), 'ok'); App.refresh();
